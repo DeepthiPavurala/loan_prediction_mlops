@@ -1,0 +1,58 @@
+# Python cache/build files
+__pycache__/
+*.py[cod]
+*$py.class
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Pytest / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.cache/
+.tox/
+.nox/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Logs and generated reports
+logs/
+*.log
+reports/test_reports/
+reports/*.html
+!reports/.gitkeep
+
+# Keep small sample requests if needed
+!data/sample_requests/
+!data/sample_requests/**
+
+# Model artifacts
+artifacts/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# IDE / OS files
+.idea/
+.vscode/
+.DS_Store
+__MACOSX/
+*.swp
+*.swo
+
+# Local DB files
+*.db
+*.sqlite
+*.sqlite3

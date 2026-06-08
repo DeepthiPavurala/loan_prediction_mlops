@@ -1,0 +1,917 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Loan Approval MLOps Backend",
+    "description": "MLOps-style backend for loan approval: ingestion, preparation, training, evaluation, inference, and drift monitoring.",
+    "version": "2.0.0"
+  },
+  "paths": {
+    "/": {
+      "get": {
+        "tags": ["health"],
+        "summary": "Root",
+        "operationId": "root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {},
+                "example": {
+                  "message": "Loan Approval MLOps Backend",
+                  "docs": "/docs",
+                  "health": "/health"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": ["health"],
+        "summary": "Health Check",
+        "description": "Returns service health and whether the model artifact is loaded.",
+        "operationId": "health_check_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/predict": {
+      "post": {
+        "tags": ["prediction"],
+        "summary": "Single Loan Prediction",
+        "description": "Submit a single loan application and receive an approval prediction with eligibility details.",
+        "operationId": "predict_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoanApplication"
+              },
+              "example": {
+                "no_of_dependents": 2,
+                "education": "Graduate",
+                "self_employed": "No",
+                "income_annum": 900000,
+                "loan_amount": 2000000,
+                "loan_term": 12,
+                "cibil_score": 750,
+                "residential_assets_value": 1000000,
+                "commercial_assets_value": 0,
+                "luxury_assets_value": 0,
+                "bank_asset_value": 500000
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoanPredictionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/predict/batch": {
+      "post": {
+        "tags": ["prediction"],
+        "summary": "Batch Loan Predictions",
+        "description": "Submit multiple loan applications in a single request.",
+        "operationId": "predict_batch_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/LoanApplication"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchPredictionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/predict/explain": {
+      "post": {
+        "tags": ["prediction"],
+        "summary": "Prediction with Feature Explanation",
+        "description": "Returns a prediction plus per-feature importance contributions ranked by impact.",
+        "operationId": "predict_explain_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExplainRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExplainResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pipeline/ingest": {
+      "post": {
+        "tags": ["ml-pipeline"],
+        "summary": "Ingest Raw Data",
+        "description": "Loads the raw loan CSV from disk, validates required columns, and stores an ingested snapshot.",
+        "operationId": "ingest_data_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IngestionResult"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pipeline/prepare": {
+      "post": {
+        "tags": ["ml-pipeline"],
+        "summary": "Prepare Data",
+        "description": "Cleans ingested data, engineers mortgage-style risk features, and produces train/test/reference splits.",
+        "operationId": "prepare_data_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreparationResult"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pipeline/train": {
+      "post": {
+        "tags": ["ml-pipeline"],
+        "summary": "Train Model",
+        "description": "Trains Logistic Regression, Random Forest, and Gradient Boosting candidates; registers the best by F1 score.",
+        "operationId": "train_model_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainingResult"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pipeline/evaluate": {
+      "post": {
+        "tags": ["ml-pipeline"],
+        "summary": "Evaluate Model",
+        "description": "Evaluates the registered model on the holdout test set and writes an evaluation report.",
+        "operationId": "evaluate_model_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvaluationResult"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pipeline/full": {
+      "post": {
+        "tags": ["ml-pipeline"],
+        "summary": "Run Full Pipeline",
+        "description": "Runs ingest → prepare → train → evaluate in sequence. Use this for a full end-to-end retrain.",
+        "operationId": "run_full_pipeline_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FullPipelineResult"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/monitoring/drift": {
+      "get": {
+        "tags": ["monitoring"],
+        "summary": "Run Drift Detection",
+        "description": "Compares the live prediction log against the reference dataset. Uses KS test for numeric features and chi-square for categorical features.",
+        "operationId": "run_drift_monitoring_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DriftReport"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/monitoring/performance": {
+      "get": {
+        "tags": ["monitoring"],
+        "summary": "Model Performance Summary",
+        "description": "Returns training metrics, live approval rate, average confidence, and latest drift status.",
+        "operationId": "model_performance_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PerformanceSummary"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Evaluation report not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "LoanApplication": {
+        "type": "object",
+        "title": "LoanApplication",
+        "description": "Input payload for a single loan application. Extra fields are forbidden.",
+        "required": [
+          "no_of_dependents",
+          "education",
+          "self_employed",
+          "income_annum",
+          "loan_amount",
+          "loan_term",
+          "cibil_score"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "loan_id": {
+            "type": ["integer", "null"],
+            "description": "Optional loan identifier (ignored during prediction)."
+          },
+          "no_of_dependents": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of financial dependents."
+          },
+          "education": {
+            "type": "string",
+            "enum": ["Graduate", "Not Graduate"],
+            "description": "Applicant's education level."
+          },
+          "self_employed": {
+            "type": "string",
+            "enum": ["Yes", "No"],
+            "description": "Whether the applicant is self-employed."
+          },
+          "income_annum": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "description": "Annual income in local currency."
+          },
+          "loan_amount": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "description": "Requested loan amount."
+          },
+          "loan_term": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "description": "Loan term in months."
+          },
+          "cibil_score": {
+            "type": "integer",
+            "minimum": 300,
+            "maximum": 900,
+            "description": "Credit score (CIBIL range 300–900)."
+          },
+          "residential_assets_value": {
+            "type": ["number", "null"],
+            "minimum": 0,
+            "default": 0,
+            "description": "Value of residential assets. Defaults to 0 if not provided."
+          },
+          "commercial_assets_value": {
+            "type": ["number", "null"],
+            "minimum": 0,
+            "default": 0,
+            "description": "Value of commercial assets. Defaults to 0 if not provided."
+          },
+          "luxury_assets_value": {
+            "type": ["number", "null"],
+            "minimum": 0,
+            "default": 0,
+            "description": "Value of luxury assets. Defaults to 0 if not provided."
+          },
+          "bank_asset_value": {
+            "type": ["number", "null"],
+            "minimum": 0,
+            "default": 0,
+            "description": "Value of bank/liquid assets. Defaults to 0 if not provided."
+          }
+        }
+      },
+      "ExplainRequest": {
+        "allOf": [
+          { "$ref": "#/components/schemas/LoanApplication" }
+        ],
+        "title": "ExplainRequest",
+        "description": "Same payload as LoanApplication; used to request a prediction with feature contributions."
+      },
+      "LoanEligibility": {
+        "type": "object",
+        "title": "LoanEligibility",
+        "description": "Computed eligibility bounds based on income and configured ratios.",
+        "required": [
+          "min_loan_amount",
+          "max_loan_amount",
+          "loan_income_ratio",
+          "max_allowed_ratio",
+          "within_limits"
+        ],
+        "properties": {
+          "min_loan_amount": {
+            "type": "number",
+            "description": "Minimum allowed loan amount (configured floor)."
+          },
+          "max_loan_amount": {
+            "type": "number",
+            "description": "Maximum allowed loan amount (income × max_loan_income_ratio)."
+          },
+          "loan_income_ratio": {
+            "type": "number",
+            "description": "Requested loan amount divided by annual income."
+          },
+          "max_allowed_ratio": {
+            "type": "number",
+            "description": "Configured maximum loan-to-income ratio (default 5.0)."
+          },
+          "within_limits": {
+            "type": "boolean",
+            "description": "True if the loan amount falls between the min and max bounds."
+          }
+        }
+      },
+      "LoanPredictionResponse": {
+        "type": "object",
+        "title": "LoanPredictionResponse",
+        "required": [
+          "prediction",
+          "prediction_label",
+          "approval_probability"
+        ],
+        "properties": {
+          "prediction": {
+            "type": "integer",
+            "enum": [0, 1],
+            "description": "0 = Rejected, 1 = Approved."
+          },
+          "prediction_label": {
+            "type": "string",
+            "enum": ["Approved", "Rejected"]
+          },
+          "approval_probability": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Model confidence that the loan is approved."
+          },
+          "model_version": {
+            "type": ["string", "null"],
+            "description": "ISO-8601 UTC timestamp of when the model was trained."
+          },
+          "needs_review": {
+            "type": "boolean",
+            "default": false,
+            "description": "True when an approved loan has a loan-to-income ratio above the review threshold."
+          },
+          "review_reason": {
+            "type": ["string", "null"],
+            "description": "Human-readable explanation when needs_review is true."
+          },
+          "loan_eligibility": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/LoanEligibility" },
+              { "type": "null" }
+            ]
+          }
+        }
+      },
+      "BatchPredictionResponse": {
+        "type": "object",
+        "title": "BatchPredictionResponse",
+        "required": ["predictions", "total_records"],
+        "properties": {
+          "predictions": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/LoanPredictionResponse" }
+          },
+          "total_records": {
+            "type": "integer",
+            "description": "Number of applications processed."
+          }
+        }
+      },
+      "FeatureImportanceItem": {
+        "type": "object",
+        "title": "FeatureImportanceItem",
+        "required": ["feature", "importance"],
+        "properties": {
+          "feature": {
+            "type": "string",
+            "description": "Transformed feature name (e.g. numeric__cibil_score)."
+          },
+          "importance": {
+            "type": "number",
+            "description": "Feature importance score (Gini for tree models, |coef| for linear models)."
+          }
+        }
+      },
+      "ExplainResponse": {
+        "type": "object",
+        "title": "ExplainResponse",
+        "required": ["prediction", "prediction_label", "approval_probability"],
+        "properties": {
+          "prediction": {
+            "type": "integer",
+            "enum": [0, 1]
+          },
+          "prediction_label": {
+            "type": "string",
+            "enum": ["Approved", "Rejected"]
+          },
+          "approval_probability": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "feature_contributions": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/FeatureImportanceItem" },
+            "description": "Features ranked by importance, descending."
+          }
+        }
+      },
+      "HealthResponse": {
+        "type": "object",
+        "title": "HealthResponse",
+        "required": ["status", "service", "version"],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["healthy", "degraded"],
+            "description": "healthy when the model artifact is present, degraded otherwise."
+          },
+          "service": {
+            "type": "string",
+            "example": "Loan Approval MLOps Backend"
+          },
+          "version": {
+            "type": "string",
+            "example": "2.0.0"
+          },
+          "model_ready": {
+            "type": "boolean",
+            "default": false
+          },
+          "model_path": {
+            "type": ["string", "null"],
+            "description": "Absolute path to the model artifact on disk."
+          }
+        }
+      },
+      "IngestionResult": {
+        "type": "object",
+        "title": "IngestionResult",
+        "properties": {
+          "status": { "type": "string", "example": "success" },
+          "rows": { "type": "integer" },
+          "columns": { "type": "integer" },
+          "output_path": { "type": "string" },
+          "snapshot_path": { "type": "string" }
+        }
+      },
+      "PreparationResult": {
+        "type": "object",
+        "title": "PreparationResult",
+        "properties": {
+          "status": { "type": "string", "example": "success" },
+          "prepared_rows": { "type": "integer" },
+          "train_rows": { "type": "integer" },
+          "test_rows": { "type": "integer" },
+          "prepared_path": { "type": "string" },
+          "train_path": { "type": "string" },
+          "test_path": { "type": "string" },
+          "reference_data_path": { "type": "string" }
+        }
+      },
+      "ModelMetrics": {
+        "type": "object",
+        "title": "ModelMetrics",
+        "properties": {
+          "accuracy": { "type": "number" },
+          "precision": { "type": "number" },
+          "recall": { "type": "number" },
+          "f1": { "type": "number" },
+          "roc_auc": { "type": "number" }
+        }
+      },
+      "CandidateResult": {
+        "type": "object",
+        "title": "CandidateResult",
+        "properties": {
+          "model_name": {
+            "type": "string",
+            "enum": ["logistic_regression", "random_forest", "gradient_boosting"]
+          },
+          "accuracy": { "type": "number" },
+          "precision": { "type": "number" },
+          "recall": { "type": "number" },
+          "f1": { "type": "number" },
+          "roc_auc": { "type": "number" }
+        }
+      },
+      "TrainingResult": {
+        "type": "object",
+        "title": "TrainingResult",
+        "properties": {
+          "status": { "type": "string", "example": "success" },
+          "model_name": {
+            "type": "string",
+            "enum": ["logistic_regression", "random_forest", "gradient_boosting"],
+            "description": "Name of the winning model."
+          },
+          "model_path": { "type": "string" },
+          "trained_at_utc": { "type": "string", "format": "date-time" },
+          "selection_metric": { "type": "string", "example": "f1" },
+          "metrics": { "$ref": "#/components/schemas/ModelMetrics" },
+          "candidate_results": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CandidateResult" }
+          },
+          "features": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "target_column": { "type": "string", "example": "loan_status" }
+        }
+      },
+      "EvaluationResult": {
+        "type": "object",
+        "title": "EvaluationResult",
+        "properties": {
+          "status": { "type": "string", "example": "success" },
+          "roc_auc": { "type": "number" },
+          "classification_report": {
+            "type": "object",
+            "description": "sklearn classification_report output_dict=True structure."
+          },
+          "confusion_matrix": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": { "type": "integer" }
+            },
+            "description": "2×2 confusion matrix [[TN, FP], [FN, TP]]."
+          },
+          "output_path": { "type": "string" }
+        }
+      },
+      "FullPipelineResult": {
+        "type": "object",
+        "title": "FullPipelineResult",
+        "properties": {
+          "status": { "type": "string", "example": "success" },
+          "steps": {
+            "type": "object",
+            "properties": {
+              "ingestion": { "$ref": "#/components/schemas/IngestionResult" },
+              "preparation": { "$ref": "#/components/schemas/PreparationResult" },
+              "training": { "$ref": "#/components/schemas/TrainingResult" },
+              "evaluation": { "$ref": "#/components/schemas/EvaluationResult" }
+            }
+          }
+        }
+      },
+      "FeatureDriftResult": {
+        "type": "object",
+        "title": "FeatureDriftResult",
+        "properties": {
+          "test": {
+            "type": "string",
+            "enum": ["ks", "chi_square"],
+            "description": "Statistical test used (KS for numeric, chi-square for categorical)."
+          },
+          "statistic": { "type": ["number", "null"] },
+          "p_value": { "type": ["number", "null"] },
+          "drift_detected": { "type": "boolean" }
+        }
+      },
+      "DriftReport": {
+        "type": "object",
+        "title": "DriftReport",
+        "properties": {
+          "status": { "type": "string", "example": "success" },
+          "drift_detected": {
+            "type": "boolean",
+            "description": "True if any feature shows drift."
+          },
+          "drifted_features": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Names of features where drift was detected."
+          },
+          "threshold": {
+            "type": "number",
+            "description": "p-value threshold used (default 0.10)."
+          },
+          "feature_results": {
+            "type": "object",
+            "additionalProperties": { "$ref": "#/components/schemas/FeatureDriftResult" },
+            "description": "Per-feature drift test results keyed by feature name."
+          },
+          "output_path": { "type": "string" }
+        }
+      },
+      "PerformanceSummary": {
+        "type": "object",
+        "title": "PerformanceSummary",
+        "properties": {
+          "status": { "type": "string", "example": "success" },
+          "training_accuracy": { "type": ["number", "null"] },
+          "training_roc_auc": { "type": ["number", "null"] },
+          "total_predictions_served": { "type": "integer" },
+          "live_approval_rate": {
+            "type": ["number", "null"],
+            "description": "Fraction of live predictions that were approved."
+          },
+          "avg_confidence": {
+            "type": ["number", "null"],
+            "description": "Mean approval probability across all logged predictions."
+          },
+          "drift_detected": {
+            "type": ["boolean", "null"],
+            "description": "null if drift check has not been run yet."
+          },
+          "drifted_features": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      },
+      "HTTPError": {
+        "type": "object",
+        "title": "HTTPError",
+        "properties": {
+          "detail": { "type": "string" }
+        }
+      },
+      "ValidationError": {
+        "type": "object",
+        "required": ["loc", "msg", "type"],
+        "properties": {
+          "loc": {
+            "type": "array",
+            "items": { "oneOf": [{ "type": "string" }, { "type": "integer" }] }
+          },
+          "msg": { "type": "string" },
+          "type": { "type": "string" }
+        }
+      },
+      "HTTPValidationError": {
+        "type": "object",
+        "properties": {
+          "detail": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ValidationError" }
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "health",
+      "description": "Service health and root endpoint."
+    },
+    {
+      "name": "prediction",
+      "description": "Single, batch, and explainability inference endpoints."
+    },
+    {
+      "name": "ml-pipeline",
+      "description": "Data ingestion, preparation, model training, and evaluation pipeline steps."
+    },
+    {
+      "name": "monitoring",
+      "description": "Drift detection and live model performance monitoring."
+    }
+  ]
+}

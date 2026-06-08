@@ -1,0 +1,556 @@
+{
+  "description": "Golden output fixtures for model regression tests. Regenerate with: python scripts/analyze_model.py",
+  "feature_importances": [
+    {
+      "feature": "cibil_score",
+      "importance": 0.810137
+    },
+    {
+      "feature": "loan_term",
+      "importance": 0.06456
+    },
+    {
+      "feature": "loan_income_ratio",
+      "importance": 0.035687
+    },
+    {
+      "feature": "asset_coverage_ratio",
+      "importance": 0.016977
+    },
+    {
+      "feature": "net_worth",
+      "importance": 0.012563
+    },
+    {
+      "feature": "loan_amount",
+      "importance": 0.009615
+    },
+    {
+      "feature": "luxury_assets_value",
+      "importance": 0.007931
+    },
+    {
+      "feature": "total_assets",
+      "importance": 0.007491
+    },
+    {
+      "feature": "residential_assets_value",
+      "importance": 0.007463
+    },
+    {
+      "feature": "commercial_assets_value",
+      "importance": 0.007406
+    },
+    {
+      "feature": "bank_asset_value",
+      "importance": 0.006941
+    },
+    {
+      "feature": "income_annum",
+      "importance": 0.006518
+    },
+    {
+      "feature": "no_of_dependents",
+      "importance": 0.003245
+    },
+    {
+      "feature": "self_employed_Yes",
+      "importance": 0.000906
+    },
+    {
+      "feature": "education_Graduate",
+      "importance": 0.00086
+    },
+    {
+      "feature": "self_employed_No",
+      "importance": 0.000853
+    },
+    {
+      "feature": "education_Not Graduate",
+      "importance": 0.000849
+    }
+  ],
+  "test_cases": [
+    {
+      "name": "strong_all_around",
+      "description": "High CIBIL, high income, good ratios, large assets -- clear approval",
+      "input": {
+        "no_of_dependents": 2,
+        "education": "Graduate",
+        "self_employed": "No",
+        "income_annum": 9600000,
+        "loan_amount": 29900000,
+        "loan_term": 12,
+        "cibil_score": 778,
+        "residential_assets_value": 2400000,
+        "commercial_assets_value": 17600000,
+        "luxury_assets_value": 22700000,
+        "bank_asset_value": 8000000
+      },
+      "engineered_features": {
+        "loan_income_ratio": 3.1146,
+        "total_assets": 50700000,
+        "asset_coverage_ratio": 1.6957,
+        "net_worth": 20800000
+      },
+      "expected_output": {
+        "prediction": 1,
+        "prediction_label": "Approved",
+        "approval_probability": 0.97,
+        "needs_review": false,
+        "review_reason": null,
+        "loan_eligibility": {
+          "min_loan_amount": 50000,
+          "max_loan_amount": 48000000.0,
+          "loan_income_ratio": 3.1146,
+          "max_allowed_ratio": 5.0,
+          "within_limits": true
+        }
+      }
+    },
+    {
+      "name": "low_cibil_low_income",
+      "description": "Low CIBIL (350), low income, high loan -- clear rejection",
+      "input": {
+        "no_of_dependents": 3,
+        "education": "Not Graduate",
+        "self_employed": "No",
+        "income_annum": 300000,
+        "loan_amount": 5000000,
+        "loan_term": 12,
+        "cibil_score": 350,
+        "residential_assets_value": 0,
+        "commercial_assets_value": 0,
+        "luxury_assets_value": 0,
+        "bank_asset_value": 0
+      },
+      "engineered_features": {
+        "loan_income_ratio": 16.6667,
+        "total_assets": 0,
+        "asset_coverage_ratio": 0.0,
+        "net_worth": -5000000
+      },
+      "expected_output": {
+        "prediction": 0,
+        "prediction_label": "Rejected",
+        "approval_probability": 0.085,
+        "needs_review": false,
+        "review_reason": null,
+        "loan_eligibility": {
+          "min_loan_amount": 50000,
+          "max_loan_amount": 1500000.0,
+          "loan_income_ratio": 16.6667,
+          "max_allowed_ratio": 5.0,
+          "within_limits": false
+        }
+      }
+    },
+    {
+      "name": "high_cibil_terrible_ratios",
+      "description": "CIBIL 800 but loan is 100x income with zero assets -- rejection despite high CIBIL",
+      "input": {
+        "no_of_dependents": 0,
+        "education": "Graduate",
+        "self_employed": "No",
+        "income_annum": 100000,
+        "loan_amount": 10000000,
+        "loan_term": 4,
+        "cibil_score": 800,
+        "residential_assets_value": 0,
+        "commercial_assets_value": 0,
+        "luxury_assets_value": 0,
+        "bank_asset_value": 0
+      },
+      "engineered_features": {
+        "loan_income_ratio": 100.0,
+        "total_assets": 0,
+        "asset_coverage_ratio": 0.0,
+        "net_worth": -10000000
+      },
+      "expected_output": {
+        "prediction": 0,
+        "prediction_label": "Rejected",
+        "approval_probability": 0.07,
+        "needs_review": false,
+        "review_reason": null,
+        "loan_eligibility": {
+          "min_loan_amount": 50000,
+          "max_loan_amount": 500000.0,
+          "loan_income_ratio": 100.0,
+          "max_allowed_ratio": 5.0,
+          "within_limits": false
+        }
+      }
+    },
+    {
+      "name": "high_cibil_moderate_loan",
+      "description": "CIBIL 800, moderate loan (7x income), zero assets",
+      "input": {
+        "no_of_dependents": 0,
+        "education": "Graduate",
+        "self_employed": "No",
+        "income_annum": 100000,
+        "loan_amount": 700000,
+        "loan_term": 4,
+        "cibil_score": 800,
+        "residential_assets_value": 0,
+        "commercial_assets_value": 0,
+        "luxury_assets_value": 0,
+        "bank_asset_value": 0
+      },
+      "engineered_features": {
+        "loan_income_ratio": 7.0,
+        "total_assets": 0,
+        "asset_coverage_ratio": 0.0,
+        "net_worth": -700000
+      },
+      "expected_output": {
+        "prediction": 0,
+        "prediction_label": "Rejected",
+        "approval_probability": 0.095,
+        "needs_review": false,
+        "review_reason": null,
+        "loan_eligibility": {
+          "min_loan_amount": 50000,
+          "max_loan_amount": 500000.0,
+          "loan_income_ratio": 7.0,
+          "max_allowed_ratio": 5.0,
+          "within_limits": false
+        }
+      }
+    },
+    {
+      "name": "high_cibil_small_loan",
+      "description": "CIBIL 800, small loan (0.7x income), zero assets",
+      "input": {
+        "no_of_dependents": 0,
+        "education": "Graduate",
+        "self_employed": "No",
+        "income_annum": 100000,
+        "loan_amount": 70000,
+        "loan_term": 4,
+        "cibil_score": 800,
+        "residential_assets_value": 0,
+        "commercial_assets_value": 0,
+        "luxury_assets_value": 0,
+        "bank_asset_value": 0
+      },
+      "engineered_features": {
+        "loan_income_ratio": 0.7,
+        "total_assets": 0,
+        "asset_coverage_ratio": 0.0,
+        "net_worth": -70000
+      },
+      "expected_output": {
+        "prediction": 0,
+        "prediction_label": "Rejected",
+        "approval_probability": 0.255,
+        "needs_review": false,
+        "review_reason": null,
+        "loan_eligibility": {
+          "min_loan_amount": 50000,
+          "max_loan_amount": 500000.0,
+          "loan_income_ratio": 0.7,
+          "max_allowed_ratio": 5.0,
+          "within_limits": true
+        }
+      }
+    },
+    {
+      "name": "mid_cibil_good_ratios",
+      "description": "Mid CIBIL (600), but excellent income-to-loan ratio and strong assets",
+      "input": {
+        "no_of_dependents": 1,
+        "education": "Graduate",
+        "self_employed": "No",
+        "income_annum": 5000000,
+        "loan_amount": 2000000,
+        "loan_term": 12,
+        "cibil_score": 600,
+        "residential_assets_value": 3000000,
+        "commercial_assets_value": 2000000,
+        "luxury_assets_value": 1000000,
+        "bank_asset_value": 1000000
+      },
+      "engineered_features": {
+        "loan_income_ratio": 0.4,
+        "total_assets": 7000000,
+        "asset_coverage_ratio": 3.5,
+        "net_worth": 5000000
+      },
+      "expected_output": {
+        "prediction": 1,
+        "prediction_label": "Approved",
+        "approval_probability": 0.955,
+        "needs_review": false,
+        "review_reason": null,
+        "loan_eligibility": {
+          "min_loan_amount": 50000,
+          "max_loan_amount": 25000000.0,
+          "loan_income_ratio": 0.4,
+          "max_allowed_ratio": 5.0,
+          "within_limits": true
+        }
+      }
+    },
+    {
+      "name": "low_cibil_great_assets",
+      "description": "Low CIBIL (400) but massive assets and low loan -- tests if assets can override CIBIL",
+      "input": {
+        "no_of_dependents": 0,
+        "education": "Graduate",
+        "self_employed": "No",
+        "income_annum": 8000000,
+        "loan_amount": 1000000,
+        "loan_term": 6,
+        "cibil_score": 400,
+        "residential_assets_value": 10000000,
+        "commercial_assets_value": 5000000,
+        "luxury_assets_value": 3000000,
+        "bank_asset_value": 2000000
+      },
+      "engineered_features": {
+        "loan_income_ratio": 0.125,
+        "total_assets": 20000000,
+        "asset_coverage_ratio": 20.0,
+        "net_worth": 19000000
+      },
+      "expected_output": {
+        "prediction": 0,
+        "prediction_label": "Rejected",
+        "approval_probability": 0.035,
+        "needs_review": false,
+        "review_reason": null,
+        "loan_eligibility": {
+          "min_loan_amount": 50000,
+          "max_loan_amount": 40000000.0,
+          "loan_income_ratio": 0.125,
+          "max_allowed_ratio": 5.0,
+          "within_limits": true
+        }
+      }
+    },
+    {
+      "name": "not_graduate_self_employed_high_cibil",
+      "description": "Not Graduate + self-employed but high CIBIL and good financials",
+      "input": {
+        "no_of_dependents": 4,
+        "education": "Not Graduate",
+        "self_employed": "Yes",
+        "income_annum": 4000000,
+        "loan_amount": 8000000,
+        "loan_term": 10,
+        "cibil_score": 750,
+        "residential_assets_value": 5000000,
+        "commercial_assets_value": 3000000,
+        "luxury_assets_value": 2000000,
+        "bank_asset_value": 1000000
+      },
+      "engineered_features": {
+        "loan_income_ratio": 2.0,
+        "total_assets": 11000000,
+        "asset_coverage_ratio": 1.375,
+        "net_worth": 3000000
+      },
+      "expected_output": {
+        "prediction": 1,
+        "prediction_label": "Approved",
+        "approval_probability": 0.97,
+        "needs_review": false,
+        "review_reason": null,
+        "loan_eligibility": {
+          "min_loan_amount": 50000,
+          "max_loan_amount": 20000000.0,
+          "loan_income_ratio": 2.0,
+          "max_allowed_ratio": 5.0,
+          "within_limits": true
+        }
+      }
+    },
+    {
+      "name": "graduate_high_dependents",
+      "description": "Graduate with many dependents, moderate financials",
+      "input": {
+        "no_of_dependents": 5,
+        "education": "Graduate",
+        "self_employed": "Yes",
+        "income_annum": 3000000,
+        "loan_amount": 10000000,
+        "loan_term": 15,
+        "cibil_score": 650,
+        "residential_assets_value": 2000000,
+        "commercial_assets_value": 1000000,
+        "luxury_assets_value": 500000,
+        "bank_asset_value": 500000
+      },
+      "engineered_features": {
+        "loan_income_ratio": 3.3333,
+        "total_assets": 4000000,
+        "asset_coverage_ratio": 0.4,
+        "net_worth": -6000000
+      },
+      "expected_output": {
+        "prediction": 0,
+        "prediction_label": "Rejected",
+        "approval_probability": 0.14,
+        "needs_review": false,
+        "review_reason": null,
+        "loan_eligibility": {
+          "min_loan_amount": 50000,
+          "max_loan_amount": 15000000.0,
+          "loan_income_ratio": 3.3333,
+          "max_allowed_ratio": 5.0,
+          "within_limits": true
+        }
+      }
+    },
+    {
+      "name": "borderline_approved",
+      "description": "CIBIL 610 with decent assets and 1.5x loan/income -- just over the approval line",
+      "input": {
+        "no_of_dependents": 1,
+        "education": "Graduate",
+        "self_employed": "No",
+        "income_annum": 4000000,
+        "loan_amount": 6000000,
+        "loan_term": 10,
+        "cibil_score": 610,
+        "residential_assets_value": 3000000,
+        "commercial_assets_value": 2000000,
+        "luxury_assets_value": 1000000,
+        "bank_asset_value": 1000000
+      },
+      "engineered_features": {
+        "loan_income_ratio": 1.5,
+        "total_assets": 7000000,
+        "asset_coverage_ratio": 1.1667,
+        "net_worth": 1000000
+      },
+      "expected_output": {
+        "prediction": 1,
+        "prediction_label": "Approved",
+        "approval_probability": 0.94,
+        "needs_review": false,
+        "review_reason": null,
+        "loan_eligibility": {
+          "min_loan_amount": 50000,
+          "max_loan_amount": 20000000.0,
+          "loan_income_ratio": 1.5,
+          "max_allowed_ratio": 5.0,
+          "within_limits": true
+        }
+      }
+    },
+    {
+      "name": "approved_needs_review",
+      "description": "High CIBIL (750) with strong assets but loan is 5x income -- approved but flagged for review",
+      "input": {
+        "no_of_dependents": 1,
+        "education": "Graduate",
+        "self_employed": "No",
+        "income_annum": 5000000,
+        "loan_amount": 25000000,
+        "loan_term": 12,
+        "cibil_score": 750,
+        "residential_assets_value": 10000000,
+        "commercial_assets_value": 8000000,
+        "luxury_assets_value": 5000000,
+        "bank_asset_value": 5000000
+      },
+      "engineered_features": {
+        "loan_income_ratio": 5.0,
+        "total_assets": 28000000,
+        "asset_coverage_ratio": 1.12,
+        "net_worth": 3000000
+      },
+      "expected_output": {
+        "prediction": 1,
+        "prediction_label": "Approved",
+        "approval_probability": 0.98,
+        "needs_review": true,
+        "review_reason": "Loan amount exceeds 4.0x income (ratio: 5.0)",
+        "loan_eligibility": {
+          "min_loan_amount": 50000,
+          "max_loan_amount": 25000000.0,
+          "loan_income_ratio": 5.0,
+          "max_allowed_ratio": 5.0,
+          "within_limits": true
+        }
+      }
+    },
+    {
+      "name": "low_income_needs_review",
+      "description": "Low income (155K) but high CIBIL and assets -- approved at 4.84x ratio, flagged for review",
+      "input": {
+        "no_of_dependents": 0,
+        "education": "Graduate",
+        "self_employed": "No",
+        "income_annum": 155000,
+        "loan_amount": 750000,
+        "loan_term": 12,
+        "cibil_score": 780,
+        "residential_assets_value": 500000,
+        "commercial_assets_value": 300000,
+        "luxury_assets_value": 200000,
+        "bank_asset_value": 100000
+      },
+      "engineered_features": {
+        "loan_income_ratio": 4.8387,
+        "total_assets": 1100000,
+        "asset_coverage_ratio": 1.4667,
+        "net_worth": 350000
+      },
+      "expected_output": {
+        "prediction": 1,
+        "prediction_label": "Approved",
+        "approval_probability": 0.915,
+        "needs_review": true,
+        "review_reason": "Loan amount exceeds 4.0x income (ratio: 4.8387)",
+        "loan_eligibility": {
+          "min_loan_amount": 50000,
+          "max_loan_amount": 775000.0,
+          "loan_income_ratio": 4.8387,
+          "max_allowed_ratio": 5.0,
+          "within_limits": true
+        }
+      }
+    },
+    {
+      "name": "borderline_rejected",
+      "description": "CIBIL 610 with zero assets -- same CIBIL but no assets flips to rejection",
+      "input": {
+        "no_of_dependents": 1,
+        "education": "Graduate",
+        "self_employed": "No",
+        "income_annum": 4000000,
+        "loan_amount": 6000000,
+        "loan_term": 10,
+        "cibil_score": 610,
+        "residential_assets_value": 0,
+        "commercial_assets_value": 0,
+        "luxury_assets_value": 0,
+        "bank_asset_value": 0
+      },
+      "engineered_features": {
+        "loan_income_ratio": 1.5,
+        "total_assets": 0,
+        "asset_coverage_ratio": 0.0,
+        "net_worth": -6000000
+      },
+      "expected_output": {
+        "prediction": 0,
+        "prediction_label": "Rejected",
+        "approval_probability": 0.245,
+        "needs_review": false,
+        "review_reason": null,
+        "loan_eligibility": {
+          "min_loan_amount": 50000,
+          "max_loan_amount": 20000000.0,
+          "loan_income_ratio": 1.5,
+          "max_allowed_ratio": 5.0,
+          "within_limits": true
+        }
+      }
+    }
+  ]
+}

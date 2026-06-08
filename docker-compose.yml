@@ -1,0 +1,21 @@
+services:
+  loan_prediction_backend:
+    container_name: loan_prediction_backend
+    image: loan-prediction-backend:test
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    ports:
+      - "9000:9000"
+    environment:
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      - ./data:/app/data
+      - ./artifacts:/app/artifacts
+      - ./reports:/app/reports
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
