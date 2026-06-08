@@ -1,0 +1,88 @@
+stages:
+  - lint
+  - test
+  - build
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.pip-cache"
+
+cache:
+  key: "$CI_COMMIT_REF_SLUG"
+  paths:
+    - .pip-cache/
+# ---------------- LINT ----------------
+lint:
+  stage: lint
+  image: python:3.12-slim
+  script:
+    - pip install --quiet ruff
+    - ruff check app/ tests/
+    - ruff format --check app/ tests/
+  allow_failure: true
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  when: manual
+
+# ---------------- TEST ----------------
+unit-tests:
+  stage: test
+
+  image: python:3.12-slim
+  before_script:
+    - pip install --quiet pipenv
+    - pipenv install --system --dev
+  script:
+    - pytest tests/ -v --tb=short -m "not docker"
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  when: manual
+
+# ---------------- INTEGRATION TESTS (manual) ----------------
+integration-tests:
+  stage: test
+  image: docker:24.0
+
+  services:
+    - docker:24.0-dind
+
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+    PIPENV_VENV_IN_PROJECT: "1"
+
+  before_script:
+    - apk update
+    - apk upgrade --no-cache
+    - apk add --no-cache python3 py3-pip py3-virtualenv curl
+    - python3 -m venv .venv
+    - . .venv/bin/activate
+    - python -m pip install --upgrade pip setuptools wheel
+    - pip install pipenv
+    - pipenv install --dev
+
+  script:
+    - . .venv/bin/activate
+    - docker compose -f docker-compose.yml build
+    - docker compose -f docker-compose.yml up -d
+
+    - |
+      echo "Waiting for backend health..."
+      for i in $(seq 1 60); do
+        if docker compose -f docker-compose.yml exec -T backend wget -q -O /dev/null http://localhost:9000/health 2>/dev/null; then
+          echo "Backend is healthy"
+          break
+        fi
+        echo "Waiting... attempt $i"
+        sleep 2
+      done
+
+    - pytest tests/ --run-docker -v --tb=short
+
+  after_script:
+    - docker compose -f docker-compose.yml down -v
+
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
