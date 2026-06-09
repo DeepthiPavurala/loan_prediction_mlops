@@ -1,0 +1,3 @@
+services:
+  loan_prediction_backned:
+    volumes: []

@@ -22,43 +22,43 @@
   "feature_results": {
     "no_of_dependents": {
       "test": "ks",
-      "statistic": 0.4649,
+      "statistic": 0.4546,
       "p_value": 0.0,
       "drift_detected": true
     },
     "education": {
       "test": "chi_square",
-      "statistic": 144.9169,
+      "statistic": 196.4706,
       "p_value": 0.0,
       "drift_detected": true
     },
     "self_employed": {
       "test": "chi_square",
-      "statistic": 190.3716,
+      "statistic": 268.9843,
       "p_value": 0.0,
       "drift_detected": true
     },
     "income_annum": {
       "test": "ks",
-      "statistic": 0.8054,
+      "statistic": 0.7669,
       "p_value": 0.0,
       "drift_detected": true
     },
     "loan_amount": {
       "test": "ks",
-      "statistic": 0.745,
+      "statistic": 0.6962,
       "p_value": 0.0,
       "drift_detected": true
     },
     "loan_term": {
       "test": "ks",
-      "statistic": 0.5021,
+      "statistic": 0.5049,
       "p_value": 0.0,
       "drift_detected": true
     },
     "cibil_score": {
       "test": "ks",
-      "statistic": 0.6494,
+      "statistic": 0.6445,
       "p_value": 0.0,
       "drift_detected": true
     },
@@ -70,43 +70,43 @@
     },
     "commercial_assets_value": {
       "test": "ks",
-      "statistic": 0.8428,
+      "statistic": 0.8452,
       "p_value": 0.0,
       "drift_detected": true
     },
     "luxury_assets_value": {
       "test": "ks",
-      "statistic": 0.6299,
+      "statistic": 0.6324,
       "p_value": 0.0,
       "drift_detected": true
     },
     "bank_asset_value": {
       "test": "ks",
-      "statistic": 0.6619,
+      "statistic": 0.6643,
       "p_value": 0.0,
       "drift_detected": true
     },
     "loan_income_ratio": {
       "test": "ks",
-      "statistic": 0.4758,
+      "statistic": 0.458,
       "p_value": 0.0,
       "drift_detected": true
     },
     "total_assets": {
       "test": "ks",
-      "statistic": 0.5178,
+      "statistic": 0.5301,
       "p_value": 0.0,
       "drift_detected": true
     },
     "asset_coverage_ratio": {
       "test": "ks",
-      "statistic": 0.6348,
+      "statistic": 0.5954,
       "p_value": 0.0,
       "drift_detected": true
     },
     "net_worth": {
       "test": "ks",
-      "statistic": 0.3448,
+      "statistic": 0.3622,
       "p_value": 0.0,
       "drift_detected": true
     }

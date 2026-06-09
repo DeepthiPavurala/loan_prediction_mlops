@@ -3,29 +3,29 @@ import pytest
 
 from app.core.config import settings
 from app.pipelines.data_preparation import DataPreparationPipeline
+from tests.schemas.requests import LoanApplicationRequest
+
 
 prep = DataPreparationPipeline()
 
 
 @pytest.mark.unit
 def test_optional_asset_fields_are_filled_with_zero():
-    df = pd.DataFrame(
-        [
-            {
-                "no_of_dependents": 0,
-                "education": "Graduate",
-                "self_employed": "No",
-                "income_annum": 500000,
-                "loan_amount": 100000,
-                "loan_term": 12,
-                "cibil_score": 700,
-                "residential_assets_value": None,
-                "commercial_assets_value": None,
-                "luxury_assets_value": None,
-                "bank_asset_value": None,
-            }
-        ]
+    request = LoanApplicationRequest(
+        no_of_dependents=0,
+        education="Graduate",
+        self_employed="No",
+        income_annum=500000,
+        loan_amount=100000,
+        loan_term=12,
+        cibil_score=700,
+        residential_assets_value=None,
+        commercial_assets_value=None,
+        luxury_assets_value=None,
+        bank_asset_value=None,
     )
+
+    df = pd.DataFrame([request.model_dump()])
 
     result = prep.handle_missing_values(df)
 
@@ -52,7 +52,15 @@ def test_string_fields_are_trimmed():
 
 @pytest.mark.unit
 def test_column_names_are_normalized():
-    df = pd.DataFrame([{"Income Annum": 500000, " Loan Amount ": 100000, "CIBIL__Score": 700}])
+    df = pd.DataFrame(
+        [
+            {
+                "Income Annum": 500000,
+                " Loan Amount ": 100000,
+                "CIBIL__Score": 700,
+            }
+        ]
+    )
 
     result = prep.clean_column_names(df)
 
@@ -78,5 +86,8 @@ def test_handle_missing_values_raises_on_required_field():
         ]
     )
 
-    with pytest.raises(ValueError, match="Missing values found in required columns"):
+    with pytest.raises(
+        ValueError,
+        match="Missing values found in required columns",
+    ):
         prep.handle_missing_values(df)

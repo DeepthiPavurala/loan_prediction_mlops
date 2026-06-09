@@ -7,5 +7,3 @@ class HealthResponse(BaseModel):
     version: str
     model_ready: bool = False
     model_path: str | None = None
-
-

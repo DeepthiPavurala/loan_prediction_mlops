@@ -10,6 +10,7 @@ from app.utils.file_reader import read_csv
 
 logger = get_logger(__name__)
 
+
 class ModelEvaluationPipeline:
     """Evaluates the registered model against a holdout test set."""
 
