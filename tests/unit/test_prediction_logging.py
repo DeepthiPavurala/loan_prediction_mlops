@@ -60,9 +60,7 @@ def test_prediction_logger_writes_csv_with_required_columns(
 
     assert logged_df.loc[0, "prediction"] == prediction.prediction
     assert logged_df.loc[0, "prediction_label"] == prediction.prediction_label
-    assert logged_df.loc[0, "approval_probability"] == pytest.approx(
-        prediction.approval_probability
-    )
+    assert logged_df.loc[0, "approval_probability"] == pytest.approx(prediction.approval_probability)
 
 
 @pytest.mark.unit

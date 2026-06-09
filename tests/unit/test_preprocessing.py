@@ -5,7 +5,6 @@ from app.core.config import settings
 from app.pipelines.data_preparation import DataPreparationPipeline
 from tests.schemas.requests import LoanApplicationRequest
 
-
 prep = DataPreparationPipeline()
 
 

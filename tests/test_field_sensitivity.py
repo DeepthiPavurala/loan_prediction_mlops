@@ -2,7 +2,7 @@ import pytest
 
 from tests.conftest import requires_model
 from tests.schemas.requests import LoanApplicationRequest
-from tests.schemas.responses import LoanEligibility, LoanPredictionResponse
+from tests.schemas.responses import LoanPredictionResponse
 
 
 def _predict(request: LoanApplicationRequest) -> LoanPredictionResponse:
@@ -48,13 +48,9 @@ def _predict_with_review(
 
     svc = ModelService()
 
-    responses = svc.predict(
-        request.model_dump(exclude_none=True)
-    )
+    responses = svc.predict(request.model_dump(exclude_none=True))
 
-    return LoanPredictionResponse.model_validate(
-        responses[0].model_dump()
-    )
+    return LoanPredictionResponse.model_validate(responses[0].model_dump())
 
 
 def _base_approved_payload() -> LoanApplicationRequest:
@@ -73,6 +69,7 @@ def _base_approved_payload() -> LoanApplicationRequest:
         luxury_assets_value=22700000,
         bank_asset_value=8000000,
     )
+
 
 @requires_model
 @pytest.mark.sensitivity
@@ -101,17 +98,14 @@ def test_cibil_score_impact(
 ):
     """Varying CIBIL score on a strong base payload -- shows the CIBIL threshold."""
 
-    request = _base_approved_payload().model_copy(
-        update={"cibil_score": cibil_score}
-    )
+    request = _base_approved_payload().model_copy(update={"cibil_score": cibil_score})
 
     result = _predict(request)
 
     assert result.prediction_label == expected_label, (
-        f"CIBIL {cibil_score}: "
-        f"expected {expected_label}, "
-        f"got {result.prediction_label}"
+        f"CIBIL {cibil_score}: expected {expected_label}, got {result.prediction_label}"
     )
+
 
 @requires_model
 @pytest.mark.sensitivity
@@ -162,6 +156,7 @@ def test_high_cibil_ratio_override(
         f"got {result.prediction_label}"
     )
 
+
 @requires_model
 @pytest.mark.sensitivity
 def test_assets_flip_decision():
@@ -195,21 +190,16 @@ def test_assets_flip_decision():
     with_assets_result = _predict(with_assets)
 
     assert no_assets_result.prediction == 0, (
-        f"Expected rejection without assets, "
-        f"got Approved "
-        f"(prob={no_assets_result.approval_probability})"
+        f"Expected rejection without assets, got Approved (prob={no_assets_result.approval_probability})"
     )
 
     assert with_assets_result.prediction == 1, (
-        f"Expected approval with assets, "
-        f"got Rejected "
-        f"(prob={with_assets_result.approval_probability})"
+        f"Expected approval with assets, got Rejected (prob={with_assets_result.approval_probability})"
     )
 
-    assert (
-        with_assets_result.approval_probability
-        > no_assets_result.approval_probability
-    ), "Probability should increase when assets are added"
+    assert with_assets_result.approval_probability > no_assets_result.approval_probability, (
+        "Probability should increase when assets are added"
+    )
 
 
 @requires_model
@@ -234,10 +224,9 @@ def test_low_cibil_not_saved_by_assets():
     result = _predict(request)
 
     assert result.prediction == 0, (
-        f"Low CIBIL (400) should be rejected even with massive assets, "
-        f"got Approved "
-        f"(prob={result.approval_probability})"
+        f"Low CIBIL (400) should be rejected even with massive assets, got Approved (prob={result.approval_probability})"
     )
+
 
 @requires_model
 @pytest.mark.sensitivity
@@ -272,10 +261,9 @@ def test_education_employment_minimal_impact(
     result = _predict(request)
 
     assert result.prediction == 1, (
-        f"Education={education}, "
-        f"self_employed={self_employed} "
-        f"should not flip a strong approval payload to rejection"
+        f"Education={education}, self_employed={self_employed} should not flip a strong approval payload to rejection"
     )
+
 
 @requires_model
 @pytest.mark.sensitivity
@@ -322,14 +310,13 @@ def test_review_flag_never_on_rejected():
 
     from tests.data.loan_payloads import guaranteed_rejection_payload
 
-    request = LoanApplicationRequest(
-        **guaranteed_rejection_payload()
-    )
+    request = LoanApplicationRequest(**guaranteed_rejection_payload())
 
     result = _predict_with_review(request)
 
     assert result.prediction == 0
     assert result.needs_review is False
+
 
 @requires_model
 @pytest.mark.sensitivity
@@ -377,4 +364,3 @@ def test_loan_outside_limits():
     assert elig.max_loan_amount == 500000.0
     assert elig.loan_income_ratio == 6.0
     assert elig.within_limits is False
-
